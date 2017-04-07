@@ -1,0 +1,19 @@
+extends parent
+
+block content
+  h1 CPS630 Grime Video
+  p.lead A grime video by Stormzy
+  hr
+  .row
+    .col-sm-12
+      article
+        h2 Some background on stormz
+        p #{content.text}
+  hr
+  .row
+    .col-sm-12
+      article
+        h4 Stormzy Video
+        p Big for your boots is a song from his new album.
+        .center-iframe
+          iframe(type='text/html' width='640' height='390' src=content.video frameborder='0')

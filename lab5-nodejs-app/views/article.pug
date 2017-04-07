@@ -1,0 +1,12 @@
+mixin article (title,text, image)
+ article
+   .center-iframe
+     h2= title
+     img(src=image, alt='My face', height='400', width='400')
+     br
+     p= text
+
+mixin stories(title,story)
+     article
+       h6= title
+       p= story
