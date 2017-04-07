@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<script src="angular.min.js"></script>
+
+<script
+  src="https://code.jquery.com/jquery-3.2.0.min.js"
+  </script>
+  <script type="text/javascript" src="pnotify.custom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+<body ng-app="myTodoApp" ng-controller="todoController" style="padding:25px">
+
+<div>
+
+<h1> CPS 630 Lab 4 </h1>
+
+<p> Choose / Drag json in following format (given in instructions) <a target="_blank" href="http://pastebin.com/e4C7jKgH"> click here </a></p>
+
+<input ng-model="json" onchange="angular.element(this).scope().fileChanged()"
+            type="file" accept=".json" id="fileInput" style="width: 200; height:100px; background: grey"/><br/>
+    <button value="submit" type="button" ng-click="submitFile()"> Upload JSON File </input>
+</div>
+<br/>
+<div>
+  <textarea id="json_textarea" ng-model="jsonFile" style="width:10px; height:10px; overflow: auto; display:none" ></textarea>
+</div>
+
+
+
+<h2>My Todo List</h2>
+
+<form ng-submit="todoAdd()">
+    <input type="text" ng-model="todoInputTask" size="15" placeholder="New Task">
+    <input type="text" ng-model="todoInputDesc" size="50" placeholder="New Desc">
+    <input type="submit" value="Add Task">
+</form>
+
+<br>
+
+<span>Task</span>&nbsp;&nbsp;<span>Description</span>&nbsp;&nbsp;<span>Complete</span>
+<div ng-repeat="x in myTodoList">
+    <div ng-include src="'task.html'"></div>
+</div>
+<hr/>
+<p><button ng-click="remove()">Remove checked</button></p>
+
+<br/>
+
+<h2>My Completed List</h2>
+
+<span>Task</span>&nbsp;&nbsp;<span>Description</span>&nbsp;&nbsp;<span>Complete</span>
+<div ng-repeat="x in myCompletedList">
+    <div ng-include src="'task2.html'"></div>
+</div>
+
+<script type="text/ng-template" id="task2.html">
+    <span ng-bind="x.task"></span>&nbsp;&nbsp;<span ng-bind="x.description"></span>&nbsp;&nbsp;<input type="checkbox" ng-model="x.complete" disabled> 
+</script>
+<script type="text/ng-template" id="task.html">
+    <span ng-bind="x.task"></span>&nbsp;&nbsp;<span ng-bind="x.description"></span>&nbsp;&nbsp;<input type="checkbox" ng-model="x.complete"> 
+</script>
+
+
+<script>
+var app = angular.module('myTodoApp', []); 
+app.controller('todoController', function($scope) {
+
+  if($.cookie("todoList"))
+    $scope.myTodoList = JSON.parse($.cookie("todoList"));
+  else 
+    $scope.myTodoList = [];
+
+  if($.cookie("completeList"))
+    $scope.myCompletedList = JSON.parse($.cookie("completeList"));
+  else 
+    $scope.myCompletedList = [];
+
+    $scope.todoAdd = function() {
+        //DEBUGGING -- console.log($scope.myTodoList);
+        var duplicate = false;
+        for(var i = 0; i < $scope.myTodoList.length; i++) { 
+          //DEBUGGING -- console.log($scope.myTodoList[i].task.trim());
+          //DEBUGGING -- console.log($scope.todoInputTask.trim());
+           if ($scope.myTodoList[i].task.trim() === $scope.todoInputTask.trim()) { 
+                duplicate = true; break;  
+                $scope.todoInputDesc = "";
+                $scope.todoInputTask = "";
+              }
+         }
+ 
+        if(duplicate == true) {
+              alert('You are adding a duplicate task');
+                
+        } else {
+          if($scope.todoInputTask === "" || $scope.todoInputTask == null || $scope.todoInputTask == undefined) {
+              alert('Task field is empty');
+          } else {
+          $scope.myTodoList.push({task:$scope.todoInputTask, description:$scope.todoInputDesc, done:false});
+
+          }
+        }
+        $.cookie("todoList", JSON.stringify($scope.myTodoList));
+
+    };
+
+    $scope.remove = function() {
+        var oldList = $scope.myTodoList;
+        $scope.myTodoList = [];
+        angular.forEach(oldList, function(x) {
+            if (!x.complete) $scope.myTodoList.push(x); 
+            else $scope.myCompletedList.push(x)
+        });
+        $.cookie("todoList", JSON.stringify($scope.myTodoList));
+        $.cookie("completeList", JSON.stringify($scope.myCompletedList));
+
+    };
+
+    $scope.submitFile = function() {
+        var str = $('#json_textarea').val();
+
+        var jsonObj = JSON.parse(str);
+        var todo = jsonObj["todo"];
+        //DEBUGGING -- console.log(todo);
+
+        var obj = todo;
+        /*for (var key in obj){
+            var item = obj[key];
+            
+            var task = item["task"];
+            var complete = item["complete"];
+            var description = item["description"];
+
+
+        } No need to reorganize json obj*/
+        $scope.myTodoList = todo;
+        $.cookie("todoList", JSON.stringify(todo));
+        $scope.todoInputDesc = "";
+        $scope.todoInputTask = "";
+    };
+
+    $scope.fileChanged = function() {
+
+      // define reader
+      var reader = new FileReader();
+
+      reader.onerror = function(event) {
+                  alert('Error encounted when reading file');
+                  alert (event.target.error.code);
+                  
+      };
+      // A handler for the load event (just defining it, not executing it right now)
+      reader.onload = function(e) {
+          $scope.$apply(function() {
+              $scope.jsonFile = reader.result;
+          });
+      };
+
+      // get <input> element and the selected file 
+      var jsonFileInput = document.getElementById('fileInput');  
+
+      var jsonFile = jsonFileInput.files[0];
+
+      reader.readAsText(jsonFile);
+
+    };
+
+});
+
+</script>
+
+</body>
+</html>

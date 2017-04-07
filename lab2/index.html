@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Meta Tags -->
+<meta charset="UTF-8">
+<meta name="author" content="Muhammed Jobe">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<!-- Title -->
+<title>CPS630 Lab2</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- Header -->
+<header id="header">
+    
+  </div>
+</header>
+
+<!-- Home Section  -->
+<section class="defSection">
+  <div class="wrapper">
+    <main class="container" style="margin-bottom: 100px">
+      <div class="text-center intro">
+        <!--<h1 class="h1-class-intro"> <span class="cd-words-wrapper"> <b class="is-visible" style="">CPS630 Lab2: Weather App</b> </h1>-->
+        <h3 style="">
+          CPS630 Lab2: Weather App
+        </h3>
+        <h5> Select temperature mode and input a city to see weather data! </h5>
+        <h5> Hover over the points on the graph for more information! </h5>
+
+        <div id="userOptions" style="">
+          <select id="mainSelect" name="mainSelect"  style="border-style:none; border-radius:0px; height:40px; padding-left:10px;"> <option value="metric"> Celcius </option><option value="imperial"> Fahrenheit </option>  </select>
+          <input style="border-style:none; border-radius:0px; height:40px; padding-left:10px; width:20%" type="text" name="query" id="query"  placeholder="Search..." onkeypress="return runScript(event)">
+          <button style=" border: 0;box-shadow:none;border-radius: 0px; color: #179A8A;  height:42px; margin-left:-5px; background:black" type="button" value="Go" onclick="reloadCurrentWeather()" class="btn waves-effect waves-light btn-default">Go</button>
+          </span>
+        </div>
+
+        <div class="mainContent">
+        <div id="content" >
+     
+        </div>
+
+        <div id="content2" style="width:25%">
+          <div id="myDiv" style="width: 480px; height: 400px;"><!-- Plotly chart will be drawn inside this DIV --></div>
+        </div>
+        </div>
+    </main>
+  </div>
+</section>
+
+
+
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+function reloadCurrentWeather() {
+  var e = document.getElementById("mainSelect");
+var mainSelectVal = e.options[e.selectedIndex].value;
+var mainSelectText = e.options[e.selectedIndex].text;
+
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      var parsed = JSON.parse(this.responseText);
+
+      //console.log(parsed);
+
+      var content = "<div class='weatherDiv'> <p class='weatherDetails'> Current temp: "+ parsed.main.temp + " "+mainSelectText+"</p>";
+      content +=  "<p class='weatherDetails' > Weather conditions: "+ parsed.weather[0].main + " </p> <small class='weatherDetails2'> Description: " + parsed.weather[0].description + " </small> ";
+      content += "<p class='weatherDetails'> Wind speed: " + parsed.wind.speed + " </p> <small class='weatherDetails2'> Wind degree : " +parsed.wind.deg+ " </small> ";
+      content += "<p class='weatherDetails'> Humidity: " + parsed.main.humidity + " </p> </div> ";
+
+
+      document.getElementById("content").innerHTML = content
+    } else {
+      //alert(this.status + "Make sure you entered an input");
+    }
+  };
+  var searchString = document.getElementById("query").value;
+
+
+
+  var location = "http://api.openweathermap.org/data/2.5/weather?q="+searchString+"&mode=json&appid=425a12f354620b988a7a16cab1e029a6&units="+mainSelectVal
+  xhttp.open("GET", location, true);
+  xhttp.send();
+
+  reloadFiveDayPeriod(searchString, mainSelectVal,mainSelectText);
+}
+
+
+
+function reloadFiveDayPeriod(searchString, mainSelectVal,mainSelectText) {
+    var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      var parsed = JSON.parse(this.responseText);
+//console.log(parsed);
+var temp = [];
+var date = [];
+var humidity = [];
+var weather = [];
+var windSpeed = [];
+var windDegree = [];
+var hoverText = [];
+    //console.log(parsed);  
+for(var i = 0; i < parsed.cnt; i++) {    
+  //console.log(i);
+    var item = parsed.list;   
+    date.push(item[i].dt_txt);
+    temp.push(item[i].main.temp);
+    humidity.push(item[i].main.humidity);
+    weather.push(item[i].weather[0].main);
+    windSpeed.push(item[i].wind.speed);
+    windDegree.push(item[i].wind.deg);
+
+    
+
+
+    var newText = searchString+" Weather<br> Temperature: " + item[i].main.temp + " "+mainSelectText+" <br> Weather Type: " + item[i].weather[0].main + "<br> Humidity: " + item[i].main.humidity + "<br> Wind Speed: " + item[i].wind.speed + "<br> Wind Degree: " + item[i].wind.deg + "<br> <br> Date: " + item[i].dt_txt ; 
+    hoverText.push( newText);    
+
+
+}
+
+  //console.log(temp);
+  //console.log(date);
+
+      var trace1 = {
+        x: date,
+        y: temp,
+        hoverinfo:"text",
+        text: hoverText,
+  mode: 'lines+markers'
+      };
+
+  
+      var data = [trace1];
+
+      Plotly.newPlot('myDiv', data);
+      /*var content = "<div class='weatherDiv'> <p class='weatherDetails'> Current temp: "+ parsed.main.temp + " </p>";
+      content +=  "<p class='weatherDetails' > Weather conditions: "+ parsed.weather[0].main + " </p> <small class='weatherDetails2'> Description: " + parsed.weather[0].description + " </small> ";
+      content += "<p class='weatherDetails'> Wind speed: " + parsed.wind.speed + " </p> <small class='weatherDetails2'> Wind degree : " +parsed.wind.deg+ " </small> ";
+      content += "<p class='weatherDetails'> Humidity: " + parsed.main.humidity + " </p> </div> ";*/
+
+
+     // document.getElementById("content").innerHTML = content
+    } else {
+      //alert(this.status + "Make sure you entered an input");
+    }
+  };
+  var location = "http://api.openweathermap.org/data/2.5/forecast?q="+searchString+"&mode=json&appid=425a12f354620b988a7a16cab1e029a6&units="+ mainSelectVal
+  xhttp.open("GET", location, true);
+  xhttp.send();
+
+}
+
+
+  document.getElementsByName('mainSelect')[0].onchange = function() {
+    //console.log("change");
+
+
+   reloadCurrentWeather();
+
+
+
+  }
+document.getElementById("fname").onkeyup = function() {myFunction()};
+
+  $("#autocomplete").keyup(function(event){
+    if(event.keyCode == 13){
+        searchDB();
+    }
+});
+
+  function runScript(e) {
+    if (e.keyCode == 13) {
+           reloadCurrentWeather();
+
+    }
+  }
+
+
+</script>
+
+</body>
+</html>
